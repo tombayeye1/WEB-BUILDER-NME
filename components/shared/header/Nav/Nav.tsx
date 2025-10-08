@@ -281,13 +281,13 @@ export const NAV_ITEMS = [
               {
                 icon: <Careers />,
                 label: "Careers",
-                description: "Join our team, we're hiring!",
+                description: "Join our META-Group today",
                 href: "/careers",
               },
               {
                 icon: <Affiliate />,
                 label: "Creator & OSS Program",
-                description: "Earn rewards for referring customers",
+                description: "None ",
                 href: "/creator-oss-program",
               },
               {
