@@ -17,8 +17,8 @@ export default function HeaderDropdownGithub() {
       </div>
 
       <div className="text-label-large">
-        Firecrawl is open source. <br />
-        Star us to show your support!
+        Genesis . <br />
+        buy me a coffee for your support
       </div>
 
       <GithubFlame />
