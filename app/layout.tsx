@@ -27,7 +27,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: "Genesis",
-  description: "Re-imagine any website in seconds with AI-powered website builder.",
+  description: "Rebuild, Redefine, Reimagine — in Seconds.",
 };
 
 export default function RootLayout({
