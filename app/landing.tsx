@@ -49,7 +49,7 @@ export default function LandingPage() {
 
               <div className="flex gap-8">
                 <Link
-                  href="https://github.com/mendableai/open-lovable"
+                  href="https://genesis-about-page.onrender.com"
                   target="_blank"
                   className="contents"
                 >
