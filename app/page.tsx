@@ -219,7 +219,7 @@ export default function HomePage() {
               <div className="flex gap-8">
                 <a
                   className="contents"
-                  href="https://github.com/mendableai/open-lovable"
+                  href="https://genesis-about-page.onrender.com/"
                   target="_blank"
                 >
                   <ButtonUI variant="tertiary">
@@ -244,14 +244,14 @@ export default function HomePage() {
               <HomeHeroBadge />
               <HomeHeroTitle />
               <p className="text-center text-body-large">
-                Re-imagine any website, in seconds.
+                Reimagine. Redesign. Rebuild. Instantly.
               </p>
               <Link
                 className="bg-black-alpha-4 hover:bg-black-alpha-6 rounded-6 px-8 lg:px-6 text-label-large h-30 lg:h-24 block mt-8 mx-auto w-max gap-4 transition-all"
-                href="#"
+                href="https://genesis-about-page.onrender.com/"
                 onClick={(e) => e.preventDefault()}
               >
-                Powered by Firecrawl.
+                Powered by META.
               </Link>
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function HomePage() {
                       
                       {/* Selection message */}
                       <div className="flex-1 text-body-input text-accent-black">
-                        Select which site to clone from the results below
+                        Pick the website you’d like
                       </div>
                       
                       {/* Search again button */}
@@ -325,7 +325,7 @@ export default function HomePage() {
                         >
                           <path d="M14 14L10 10M11 6.5C11 9 9 11 6.5 11C4 11 2 9 2 6.5C2 4 4 2 6.5 2C9 2 11 4 11 6.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
-                        <span>Search Again</span>
+                        <span>Let’s Try That Again</span>
                       </button>
                     </>
                   ) : (
