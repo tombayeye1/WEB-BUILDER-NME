@@ -7,18 +7,17 @@ import {
 
 /**
  * GenesisProvider
- * - Implements the full provider surface expected by the app.
- * - Proxies code execution to an external Genesis HTTP endpoint for run().
- * - Provides safe, clear stubs for features not yet implemented (filesystem, Vite control, etc).
+ * - Extends the base SandboxProvider class so TypeScript recognizes protected members.
+ * - Proxies run() to an external Genesis HTTP endpoint.
+ * - Provides safe stubs for other methods required by the app.
  */
-
-export class GenesisProvider implements SandboxProvider {
-  config: SandboxProviderConfig;
+export class GenesisProvider extends SandboxProvider {
   sandbox: any | null;
   sandboxInfo: any | null;
 
   constructor(config?: SandboxProviderConfig) {
-    this.config = config || {};
+    // important: call super so protected fields (like `config`) are set correctly
+    super(config || {});
     this.sandbox = null;
     this.sandboxInfo = null;
   }
@@ -88,17 +87,12 @@ export class GenesisProvider implements SandboxProvider {
     }
   }
 
-  /* ---- Simple health-check ---- */
+  /* ---- Health check ---- */
   async isAlive(): Promise<boolean> {
     const base =
-      (process.env.GENESIS_SANDBOX_URL || '').replace(/\/v1\/run\/?$/i, '') ||
-      process.env.GENESIS_SANDBOX_HOST ||
-      null;
-
+      (process.env.GENESIS_SANDBOX_URL || '').replace(/\/v1\/run\/?$/i, '') || null;
     if (!base) return false;
-
     const tryUrls = [base, `${base}/ping`, `${base}/health`];
-
     for (const url of tryUrls) {
       try {
         const res = await fetch(url, {
@@ -106,18 +100,16 @@ export class GenesisProvider implements SandboxProvider {
           headers: {
             Authorization: `Bearer ${process.env.GENESIS_KEY || 'Genesis21345'}`,
           },
-          // small timeout isn't available natively in fetch in Node < 20;
-          // hope platform respects quick response. This is a best-effort probe.
         });
         if (res.ok) return true;
       } catch {
-        /* ignore and try next */
+        /* try next */
       }
     }
     return false;
   }
 
-  /* ---- Filesystem & command stubs (TypeScript compatibility) ---- */
+  /* ---- Filesystem & command stubs ---- */
   async runCommand(command: string): Promise<string> {
     return `[Genesis] runCommand not supported via HTTP proxy: ${command}`;
   }
@@ -131,27 +123,22 @@ export class GenesisProvider implements SandboxProvider {
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    // stub
     return;
   }
 
   async readFile(path: string): Promise<string> {
-    // stub
     return '';
   }
 
   async listFiles(path = '/'): Promise<string[]> {
-    // stub
     return [];
   }
 
   async uploadFile(path: string, content: string | Buffer): Promise<void> {
-    // stub
     return;
   }
 
   async downloadFile(path: string): Promise<Uint8Array> {
-    // stub
     return new Uint8Array();
   }
 
@@ -160,37 +147,25 @@ export class GenesisProvider implements SandboxProvider {
   }
 
   /* ---- Vite / dev-server related stubs ---- */
-  /**
-   * setupViteApp
-   * If your Genesis HTTP API exposes Vite bootstrapping, implement it here.
-   * For now we return an informative stub object.
-   */
   async setupViteApp(options?: any): Promise<any> {
     return {
       success: false,
       message:
-        'setupViteApp not implemented on Genesis provider. Implement this method if your backend supports remote Vite setup.',
+        'setupViteApp not implemented on Genesis provider. Implement if your backend supports remote Vite setup.',
     };
   }
 
-  /**
-   * restartViteServer
-   * For providers that manage a live dev server, implement restart logic.
-   * This stub is a safe no-op.
-   */
   async restartViteServer(): Promise<void> {
-    // no-op for now
     return;
   }
 
-  /* ---- misc ---- */
+  /* ---- Misc ---- */
   getSandboxUrl(): string | null {
     return process.env.GENESIS_SANDBOX_URL ?? null;
   }
 
-  /* allow extra dynamic members so TS won't complain about unknown props */
+  /* allow extra dynamic members */
   [key: string]: any;
 }
 
 export default GenesisProvider;
-
