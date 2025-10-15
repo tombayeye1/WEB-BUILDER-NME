@@ -1,3 +1,4 @@
+// lib/sandbox/providers/genesis-provider.ts
 import {
   SandboxProvider,
   SandboxProviderConfig,
@@ -6,9 +7,9 @@ import {
 
 /**
  * GenesisProvider
- * - Lightweight provider that proxies execution to your external Genesis sandbox HTTP API.
- * - Implements broad set of methods expected by the app's SandboxProvider interface as safe stubs.
- * - Customize specific methods later if you need filesystem, package install, or streaming support.
+ * - Implements the full provider surface expected by the app.
+ * - Proxies code execution to an external Genesis HTTP endpoint for run().
+ * - Provides safe, clear stubs for features not yet implemented (filesystem, Vite control, etc).
  */
 
 export class GenesisProvider implements SandboxProvider {
@@ -22,10 +23,8 @@ export class GenesisProvider implements SandboxProvider {
     this.sandboxInfo = null;
   }
 
-  /* ---- Core: create / run / destroy ---- */
-
+  /* ---- Core lifecycle ---- */
   async createSandbox(): Promise<any> {
-    // No persistent sandbox is created locally; just stash info
     this.sandboxInfo = {
       id: `genesis-sandbox-${Date.now()}`,
       provider: 'genesis',
@@ -34,6 +33,19 @@ export class GenesisProvider implements SandboxProvider {
     return this.sandboxInfo;
   }
 
+  async destroy(): Promise<void> {
+    this.sandboxInfo = null;
+  }
+
+  async terminate(): Promise<void> {
+    return this.destroy();
+  }
+
+  getSandboxInfo(): any {
+    return this.sandboxInfo;
+  }
+
+  /* ---- Execution ---- */
   async run(code: string, language = 'nodejs'): Promise<SandboxRunResult> {
     const GENESIS_URL =
       process.env.GENESIS_SANDBOX_URL || 'https://your-genesis-sandbox.onrender.com/v1/run';
@@ -76,20 +88,41 @@ export class GenesisProvider implements SandboxProvider {
     }
   }
 
-  async destroy(): Promise<void> {
-    // No-op for remote stateless provider
-    this.sandboxInfo = null;
+  /* ---- Simple health-check ---- */
+  async isAlive(): Promise<boolean> {
+    const base =
+      (process.env.GENESIS_SANDBOX_URL || '').replace(/\/v1\/run\/?$/i, '') ||
+      process.env.GENESIS_SANDBOX_HOST ||
+      null;
+
+    if (!base) return false;
+
+    const tryUrls = [base, `${base}/ping`, `${base}/health`];
+
+    for (const url of tryUrls) {
+      try {
+        const res = await fetch(url, {
+          method: 'HEAD',
+          headers: {
+            Authorization: `Bearer ${process.env.GENESIS_KEY || 'Genesis21345'}`,
+          },
+          // small timeout isn't available natively in fetch in Node < 20;
+          // hope platform respects quick response. This is a best-effort probe.
+        });
+        if (res.ok) return true;
+      } catch {
+        /* ignore and try next */
+      }
+    }
+    return false;
   }
 
   /* ---- Filesystem & command stubs (TypeScript compatibility) ---- */
-
   async runCommand(command: string): Promise<string> {
-    // Not supported by HTTP proxy; return informative message
     return `[Genesis] runCommand not supported via HTTP proxy: ${command}`;
   }
 
   async installPackages(packages: string[] = []): Promise<string> {
-    // If your Genesis API supports package install, implement an API call here.
     return `[Genesis] installPackages not supported: ${packages.join(', ')}`;
   }
 
@@ -98,53 +131,66 @@ export class GenesisProvider implements SandboxProvider {
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    // Not implemented for HTTP proxy; stub for typing
+    // stub
     return;
   }
 
   async readFile(path: string): Promise<string> {
-    // Not implemented
+    // stub
     return '';
   }
 
   async listFiles(path = '/'): Promise<string[]> {
-    // Not implemented
+    // stub
     return [];
   }
 
   async uploadFile(path: string, content: string | Buffer): Promise<void> {
-    // Not implemented
+    // stub
     return;
   }
 
   async downloadFile(path: string): Promise<Uint8Array> {
-    // Not implemented
+    // stub
     return new Uint8Array();
   }
 
-  /* ---- Lifecycle / meta ---- */
-
-  async terminate(): Promise<void> {
-    // alias for destroy
-    await this.destroy();
-  }
-
-  getSandboxUrl(): string | null {
-    // Useful for UIs that want to link to sandbox web UI (if any)
-    return process.env.GENESIS_SANDBOX_URL ?? null;
-  }
-
-  getSandboxInfo(): any {
-    return this.sandboxInfo;
-  }
-
   async getLogs(): Promise<string> {
-    // If your Genesis API supports log retrieval, implement it here.
     return '[Genesis] getLogs not implemented.';
   }
 
-  /* ---- Fallback indexer so TS treats unknown members permissively ---- */
+  /* ---- Vite / dev-server related stubs ---- */
+  /**
+   * setupViteApp
+   * If your Genesis HTTP API exposes Vite bootstrapping, implement it here.
+   * For now we return an informative stub object.
+   */
+  async setupViteApp(options?: any): Promise<any> {
+    return {
+      success: false,
+      message:
+        'setupViteApp not implemented on Genesis provider. Implement this method if your backend supports remote Vite setup.',
+    };
+  }
+
+  /**
+   * restartViteServer
+   * For providers that manage a live dev server, implement restart logic.
+   * This stub is a safe no-op.
+   */
+  async restartViteServer(): Promise<void> {
+    // no-op for now
+    return;
+  }
+
+  /* ---- misc ---- */
+  getSandboxUrl(): string | null {
+    return process.env.GENESIS_SANDBOX_URL ?? null;
+  }
+
+  /* allow extra dynamic members so TS won't complain about unknown props */
   [key: string]: any;
 }
 
 export default GenesisProvider;
+
