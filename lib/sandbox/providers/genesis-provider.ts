@@ -1,39 +1,52 @@
-// lib/sandbox/providers/genesis-provider.ts
-import type { SandboxRunResult } from "../types";
+import { SandboxProvider, SandboxProviderConfig, SandboxRunResult } from '../types';
 
-const GENESIS_URL =
-  process.env.GENESIS_SANDBOX_URL ||
-  "https://your-genesis-sandbox.onrender.com/v1/run";
+export class GenesisProvider implements SandboxProvider {
+  config: SandboxProviderConfig;
+  sandbox: any;
+  sandboxInfo: any;
 
-const GENESIS_KEY = process.env.GENESIS_KEY || "Genesis21345";
+  constructor(config?: SandboxProviderConfig) {
+    this.config = config || {};
+  }
 
-export async function runGenesisSandbox(
-  code: string,
-  language = "nodejs"
-): Promise<SandboxRunResult> {
-  try {
+  async createSandbox() {
+    // No actual persistent sandbox — just mock info
+    this.sandboxInfo = {
+      id: "genesis-sandbox",
+      status: "ready",
+      provider: "genesis",
+    };
+    return this.sandboxInfo;
+  }
+
+  async run(code: string, language: string): Promise<SandboxRunResult> {
+    const GENESIS_URL =
+      process.env.GENESIS_SANDBOX_URL ||
+      "https://your-genesis-sandbox.onrender.com/v1/run";
+
+    const GENESIS_KEY = process.env.GENESIS_KEY || "Genesis21345";
+
     const res = await fetch(GENESIS_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GENESIS_KEY}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${GENESIS_KEY}`,
       },
       body: JSON.stringify({ code, language }),
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Genesis Sandbox failed: ${res.status} ${text}`);
-    }
+    const data = await res.json();
 
-    return res.json();
-  } catch (err: any) {
-    console.error("Genesis Sandbox Error:", err);
     return {
-      id: "genesis-error-" + Date.now(),
-      status: "error",
-      output: "",
-      error: err.message || "Unknown error",
+      output: data.output || "",
+      error: data.error || null,
+      status: data.status || "completed",
+      id: data.id || "genesis-job",
     };
   }
+
+  async destroy() {
+    this.sandboxInfo = null;
+  }
 }
+
