@@ -1,29 +1,29 @@
 // lib/sandbox/providers/genesis-provider.ts
 import {
-  SandboxProvider as SandboxProviderBase,
+  SandboxProvider,
   SandboxProviderConfig,
   SandboxRunResult,
 } from '../types';
 
 /**
  * GenesisProvider
- * - Extends the runtime base provider but does so via an `any` alias to avoid brittle compile-time mismatches.
- * - Proxies run() to an external Genesis HTTP endpoint and provides safe stubs for other methods.
- *
- * NOTE: This approach preserves protected `config` inheritance (by calling super),
- * while avoiding the build errors you encountered where the class didn't match every exact signature.
+ * - Concrete provider that proxies run() to a remote Genesis HTTP API.
+ * - Explicitly declares `config` so it satisfies the SandboxProvider shape.
+ * - Other methods are safe stubs to satisfy the app's expectations.
  */
 
-// Create an any-typed alias so we can extend at runtime without tight static shape enforcement
-const SandboxProvider: any = SandboxProviderBase as any;
-
 export class GenesisProvider extends SandboxProvider {
+  // <--- explicit config field required by the base/provider type
+  public config: SandboxProviderConfig;
+
   sandbox: any | null;
   sandboxInfo: any | null;
 
   constructor(config?: SandboxProviderConfig) {
-    // call super so protected fields (like config) are initialized properly
-    super(config || {});
+    // call super to ensure any base initialization runs
+    super(config || {} as SandboxProviderConfig);
+    // explicitly set the public config property
+    this.config = config || {};
     this.sandbox = null;
     this.sandboxInfo = null;
   }
@@ -109,7 +109,7 @@ export class GenesisProvider extends SandboxProvider {
         });
         if (res.ok) return true;
       } catch {
-        // try next
+        /* try next */
       }
     }
     return false;
