@@ -10,7 +10,6 @@ export class GenesisProvider implements SandboxProvider {
   }
 
   async createSandbox() {
-    // No actual persistent sandbox — just mock info
     this.sandboxInfo = {
       id: "genesis-sandbox",
       status: "ready",
@@ -23,7 +22,6 @@ export class GenesisProvider implements SandboxProvider {
     const GENESIS_URL =
       process.env.GENESIS_SANDBOX_URL ||
       "https://your-genesis-sandbox.onrender.com/v1/run";
-
     const GENESIS_KEY = process.env.GENESIS_KEY || "Genesis21345";
 
     const res = await fetch(GENESIS_URL, {
@@ -45,8 +43,33 @@ export class GenesisProvider implements SandboxProvider {
     };
   }
 
-  async destroy() {
+  // ---- Add these no-op stubs so TypeScript chills ----
+
+  async runCommand(command: string): Promise<string> {
+    console.log("[Genesis] runCommand:", command);
+    return "Command execution not supported in Genesis sandbox.";
+  }
+
+  async writeFile(path: string, content: string): Promise<void> {
+    console.log(`[Genesis] writeFile: ${path}`);
+  }
+
+  async readFile(path: string): Promise<string> {
+    console.log(`[Genesis] readFile: ${path}`);
+    return "";
+  }
+
+  async listFiles(): Promise<string[]> {
+    console.log("[Genesis] listFiles");
+    return [];
+  }
+
+  async destroy(): Promise<void> {
+    console.log("[Genesis] destroy");
     this.sandboxInfo = null;
   }
-}
 
+  getSandboxInfo() {
+    return this.sandboxInfo;
+  }
+}
